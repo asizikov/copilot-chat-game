@@ -186,4 +186,13 @@ document.addEventListener("keydown", event => {
   }
 });
 
+document.addEventListener("touchstart", event => {
+  if (gameOver) {
+    restartGame();
+    requestAnimationFrame(draw);
+  } else if (character.y + character.height === canvas.height - 20) {
+    character.yVelocity = -character.jumpPower;
+  }
+});
+
 requestAnimationFrame(draw);
