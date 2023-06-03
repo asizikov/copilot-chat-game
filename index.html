@@ -3,9 +3,23 @@
   <head>
     <meta charset="UTF-8">
     <title>Simple Game</title>
+    <style>
+      #body, html {
+        height: 100%;
+        margin: 0;
+        background: lightblue;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      #gameCanvas {
+        border: 2px solid black;
+      }
+    </style>
   </head>
-  <body style="background-color: lightblue;">
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <body>
+    <canvas id="gameCanvas"></canvas>
     <script src="main.js"></script>
   </body>
 </html>

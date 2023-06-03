@@ -1,21 +1,26 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const character = {
-  x: canvas.width / 2 - 20,
-  y: canvas.height - 20 - 20,
-  width: 20,
-  height: 20,
-  yVelocity: 0,
-  jumpPower: 20
-};
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
 const squares = [];
 let startTime = null; // Add a variable to store the start time
 let elapsedTime = 0; 
 const clouds = []; // Add an array to store the clouds
+const trees = []; // Add an array to store the trees
 let cloudCount = 0; 
+let treeCount = 0;
+const groundHeight = canvas.height * 0.05;
 
+const character = {
+  x: canvas.width / 2 - 20,
+  y: canvas.height - 20 - groundHeight,
+  width: 20,
+  height: 20,
+  yVelocity: 0,
+  jumpPower: 20
+};
 
 function createSquare() {
   const square = {
@@ -23,11 +28,10 @@ function createSquare() {
     y: Math.random() * (canvas.height / 2 - 40) + canvas.height / 2,
     width: 20,
     height: 20,
-    xVelocity: -5
+    xVelocity: -7
   };
   squares.push(square);
 }
-
 
 function drawCharacter() {
   ctx.fillStyle = "red";
@@ -45,13 +49,23 @@ function drawTimer() {
   ctx.fillText(`Time: ${elapsedTime / 1000}s`, 10, 20); // Draw the elapsed time in seconds
 }
 
+function drawTree(tree) {
+  ctx.fillStyle = "brown";
+  ctx.fillRect(tree.x, tree.y, tree.width, tree.height);
+
+  ctx.fillStyle = "green";
+  ctx.beginPath();
+  ctx.ellipse(tree.x + tree.width / 2, tree.y - tree.height / 2, tree.width * 1.5, tree.height * 1.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 function createCloud() {
   const cloud = {
     x: canvas.width,
     y: Math.random() * (canvas.height / 2 - 40) + 20, // Generate a random y position between the top of the canvas and the middle of the canvas
     width: 50,
     height: 20,
-    xVelocity: -1,
+    xVelocity: -0.3,
     circles: [] // Add an array to store the circles
   };
   const circleRadius = 20;
@@ -70,6 +84,41 @@ function createCloud() {
   cloudCount++; // Increment the cloud count
 }
 
+function createTree() {
+  const treeHeight = character.height * 2;
+  const treeWidth = treeHeight / 2;
+  const trunkWidth = character.width * 2;
+  const trunkHeight = character.height * 4;
+  const tree = {
+    x: canvas.width,
+    y: canvas.height - treeHeight - groundHeight,
+    width: treeWidth,
+    height: treeHeight,
+    xVelocity: -1.5,
+    shapes: [] // Add an array to store the shapes
+  };
+  const trunk = {
+    x: tree.x + treeWidth / 2 - trunkWidth / 2,
+    y: tree.y + treeHeight - trunkHeight,
+    width: trunkWidth,
+    height: trunkHeight,
+    color: "saddlebrown"
+  };
+  const bushWidth = trunkWidth * 2;
+  const bushHeight = trunkWidth * 2;
+  const bush = {
+    x: tree.x + treeWidth / 2 - bushWidth / 2,
+    y: trunk.y - bushHeight,
+    width: bushWidth,
+    height: bushHeight,
+    color: "pink"
+  };
+  tree.shapes.push(trunk);
+  tree.shapes.push(bush);
+  trees.push(tree);
+  treeCount++; // Increment the tree count
+}
+
 function drawClouds() {
   for (const cloud of clouds) {
     ctx.fillStyle = "white";
@@ -82,9 +131,15 @@ function drawClouds() {
 }
 
 function drawSquares() {
-  ctx.fillStyle = "green";
+  ctx.fillStyle = "blue";
   for (const square of squares) {
     ctx.fillRect(square.x, square.y, square.width, square.height);
+  }
+}
+
+function drawTrees() {
+  for (const tree of trees) {
+    drawTree(tree);
   }
 }
 
@@ -130,6 +185,19 @@ function updateSquares() {
   }
 }
 
+function updateTrees() {
+  for (const tree of trees) {
+    tree.x += tree.xVelocity;
+    if (tree.x + tree.width < 0) {
+      trees.splice(trees.indexOf(tree), 1);
+      treeCount--; // Decrement the tree count
+    }
+  } 
+  if (treeCount < 5 && Math.random() < 0.005) { // Add a new tree if there are less than 5 trees and a random chance is met
+    createTree();
+  }
+}
+
 function drawGameOver() {
   ctx.fillStyle = "darkred";
   ctx.font = "48px sans-serif";
@@ -140,9 +208,15 @@ function drawGameOver() {
 function restartGame() {
   gameOver = false;
   squares.length = 0;
+  trees.length = 0; // Clear the trees array
   character.y = canvas.height - 20 - 20;
   startTime = null; // Reset the start time
   elapsedTime = 0; // Reset the elapsed time
+}
+
+function drawGround() {
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
 }
 
 let gameOver = false;
@@ -161,13 +235,15 @@ function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawClouds(); // Draw the clouds
   drawTimer(); // Draw the timer
-  ctx.fillStyle = "brown"; // Add a brown fill style
-  ctx.fillRect(0, canvas.height - 20, canvas.width, 20); // Draw the ground
-  drawCharacter();
+  drawGround();
+  drawTrees(); // Draw the trees
   drawSquares();
+  drawCharacter();
+
   updateCharacter();
   updateSquares();
   updateClouds(); // Update the clouds
+  updateTrees(); // Update the trees
   if (character.y + character.height > canvas.height - 20) { // Check if the character is below the ground
     character.y = canvas.height - 20 - character.height;
     character.yVelocity = 0;
