@@ -69,28 +69,23 @@ function drawCloud(cloud) {
 function createCloud() {
   const cloud = {
     x: canvas.width,
-    y: Math.random() * (canvas.height / 2 - 40) + 20, // Generate a random y position between the top of the canvas and the middle of the canvas
-    width: 50,
-    height: 20,
+    y: Math.random() * (canvas.height / 2 - 40) + 20,
+    width: 100,
+    height: 50,
     xVelocity: -0.3,
-    circles: [] // Add an array to store the circles
+    circles: []
   };
-  const circleSpacing = 0;
-  const circleCount = 5;
-  const circleRadius = cloud.height / 2;
-  const circleY = cloud.height / 2;
-  const circleX = circleRadius;
+  const circleCount = 4;
   for (let i = 0; i < circleCount; i++) {
     const circle = {
-      x: circleX + i * (circleRadius * 2 + circleSpacing),
-      y: circleY,
-      radius: circleRadius
+      x: Math.random() * cloud.width ,
+      y: Math.random() * cloud.height,
+      radius: Math.random() * (cloud.height / 2) + 20
     };
     cloud.circles.push(circle);
   }
-  
   clouds.push(cloud);
-  cloudCount++; // Increment the cloud count
+  cloudCount++;
 }
 
 function createTree() {
