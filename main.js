@@ -50,14 +50,21 @@ function drawTimer() {
 }
 
 function drawTree(tree) {
-  ctx.fillStyle = "brown";
-  ctx.fillRect(tree.x, tree.y, tree.width, tree.height);
-
-  ctx.fillStyle = "green";
-  ctx.beginPath();
-  ctx.ellipse(tree.x + tree.width / 2, tree.y - tree.height / 2, tree.width * 1.5, tree.height * 1.5, 0, 0, Math.PI * 2);
-  ctx.fill();
+  for (const shape of tree.shapes) {
+    ctx.fillStyle = shape.color;
+    ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
+  }
 }
+
+function drawCloud(cloud) {
+  ctx.fillStyle = "white";
+  for (const circle of cloud.circles) {
+    ctx.beginPath();
+    ctx.arc(cloud.x + circle.x, cloud.y + circle.y, circle.radius, 0, Math.PI * 2); // Draw the circle
+    ctx.fill();
+  }
+}
+
 
 function createCloud() {
   const cloud = {
@@ -68,18 +75,20 @@ function createCloud() {
     xVelocity: -0.3,
     circles: [] // Add an array to store the circles
   };
-  const circleRadius = 20;
   const circleSpacing = 0;
-  const cloudWidth = circleRadius * 2 * 5 + circleSpacing * 4;
-  const cloudHeight = circleRadius * 2;
-  for (let i = 0; i < 5; i++) {
+  const circleCount = 5;
+  const circleRadius = cloud.height / 2;
+  const circleY = cloud.height / 2;
+  const circleX = circleRadius;
+  for (let i = 0; i < circleCount; i++) {
     const circle = {
-      x: Math.random() * (cloudWidth - circleRadius * 2) + circleRadius + i * (circleRadius * 2 + circleSpacing),
-      y: Math.random() * (cloudHeight - circleRadius * 2) + circleRadius,
+      x: circleX + i * (circleRadius * 2 + circleSpacing),
+      y: circleY,
       radius: circleRadius
     };
     cloud.circles.push(circle);
   }
+  
   clouds.push(cloud);
   cloudCount++; // Increment the cloud count
 }
@@ -94,7 +103,7 @@ function createTree() {
     y: canvas.height - treeHeight - groundHeight,
     width: treeWidth,
     height: treeHeight,
-    xVelocity: -1.5,
+    xVelocity: -5,
     shapes: [] // Add an array to store the shapes
   };
   const trunk = {
@@ -111,7 +120,7 @@ function createTree() {
     y: trunk.y - bushHeight,
     width: bushWidth,
     height: bushHeight,
-    color: "pink"
+    color: "green"
   };
   tree.shapes.push(trunk);
   tree.shapes.push(bush);
@@ -121,12 +130,7 @@ function createTree() {
 
 function drawClouds() {
   for (const cloud of clouds) {
-    ctx.fillStyle = "white";
-    for (const circle of cloud.circles) {
-      ctx.beginPath();
-      ctx.arc(cloud.x + circle.x, cloud.y + circle.y, circle.radius, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    drawCloud(cloud);
   }
 }
 
@@ -188,11 +192,14 @@ function updateSquares() {
 function updateTrees() {
   for (const tree of trees) {
     tree.x += tree.xVelocity;
-    if (tree.x + tree.width < 0) {
-      trees.splice(trees.indexOf(tree), 1);
-      treeCount--; // Decrement the tree count
+    for (const shape of tree.shapes) {
+      shape.x += tree.xVelocity; // Add the xVelocity value to the x property of each shape
     }
-  } 
+    if (tree.x + tree.width < 0) {
+      trees.shift();
+      treeCount--;
+    }
+  }
   if (treeCount < 5 && Math.random() < 0.005) { // Add a new tree if there are less than 5 trees and a random chance is met
     createTree();
   }
