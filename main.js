@@ -1,16 +1,20 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = window.innerWidth - 50;
+canvas.height = window.innerHeight - 50;
 
-const squares = [];
+const gameObjects = {
+  squares: [],
+  clouds: [],
+  trees: [],
+  squareCount: 0,
+  cloudCount: 0,
+  treeCount: 0
+};
+
 let startTime = null; // Add a variable to store the start time
 let elapsedTime = 0; 
-const clouds = []; // Add an array to store the clouds
-const trees = []; // Add an array to store the trees
-let cloudCount = 0; 
-let treeCount = 0;
 const groundHeight = canvas.height * 0.05;
 
 const character = {
@@ -30,7 +34,7 @@ function createSquare() {
     height: 20,
     xVelocity: -7
   };
-  squares.push(square);
+  gameObjects.squares.push(square);
 }
 
 function drawCharacter() {
@@ -84,8 +88,8 @@ function createCloud() {
     };
     cloud.circles.push(circle);
   }
-  clouds.push(cloud);
-  cloudCount++;
+  gameObjects.clouds.push(cloud);
+  gameObjects.cloudCount++;
 }
 
 function createTree() {
@@ -119,25 +123,25 @@ function createTree() {
   };
   tree.shapes.push(trunk);
   tree.shapes.push(bush);
-  trees.push(tree);
-  treeCount++; // Increment the tree count
+  gameObjects.trees.push(tree);
+  gameObjects.treeCount++; // Increment the tree count
 }
 
 function drawClouds() {
-  for (const cloud of clouds) {
+  for (const cloud of gameObjects.clouds) {
     drawCloud(cloud);
   }
 }
 
 function drawSquares() {
   ctx.fillStyle = "blue";
-  for (const square of squares) {
+  for (const square of gameObjects.squares) {
     ctx.fillRect(square.x, square.y, square.width, square.height);
   }
 }
 
 function drawTrees() {
-  for (const tree of trees) {
+  for (const tree of gameObjects.trees) {
     drawTree(tree);
   }
 }
@@ -152,23 +156,23 @@ function updateCharacter() {
 }
 
 function updateClouds() {
-  for (const cloud of clouds) {
+  for (const cloud of gameObjects.clouds) {
     cloud.x += cloud.xVelocity;
     if (cloud.x + cloud.width < 0) {
-      clouds.splice(clouds.indexOf(cloud), 1);
-      cloudCount--; // Decrement the cloud count
+      gameObjects.clouds.splice(gameObjects.clouds.indexOf(cloud), 1);
+      gameObjects.cloudCount--; // Decrement the cloud count
     }
   }
-  if (cloudCount < 3 && Math.random() < 0.005) { // Add a new cloud if there are less than 3 clouds and a random chance is met
+  if (gameObjects.cloudCount < 3 && Math.random() < 0.005) { // Add a new cloud if there are less than 3 clouds and a random chance is met
     createCloud();
   }
 }
 
 function updateSquares() {
-  for (const square of squares) {
+  for (const square of gameObjects.squares) {
     square.x += square.xVelocity;
     if (square.x + square.width < 0) {
-      squares.splice(squares.indexOf(square), 1);
+      gameObjects.squares.splice(gameObjects.squares.indexOf(square), 1);
     }
     if (
       square.x < character.x + character.width &&
@@ -185,17 +189,17 @@ function updateSquares() {
 }
 
 function updateTrees() {
-  for (const tree of trees) {
+  for (const tree of gameObjects.trees) {
     tree.x += tree.xVelocity;
     for (const shape of tree.shapes) {
       shape.x += tree.xVelocity; // Add the xVelocity value to the x property of each shape
     }
     if (tree.x + tree.width < 0) {
-      trees.shift();
-      treeCount--;
+      gameObjects.trees.shift();
+      gameObjects.treeCount--;
     }
   }
-  if (treeCount < 5 && Math.random() < 0.005) { // Add a new tree if there are less than 5 trees and a random chance is met
+  if (gameObjects.treeCount < 5 && Math.random() < 0.005) { // Add a new tree if there are less than 5 trees and a random chance is met
     createTree();
   }
 }
@@ -209,9 +213,13 @@ function drawGameOver() {
 
 function restartGame() {
   gameOver = false;
-  squares.length = 0;
-  trees.length = 0; // Clear the trees array
-  character.y = canvas.height - 20 - 20;
+  gameObjects.squares.length = 0;
+  gameObjects.trees.length = 0; // Clear the trees array
+  gameObjects.clouds.length = 0;
+  gameObjects.treeCount = 0;
+  gameObjects.cloudCount = 0;
+  
+  character.y = canvas.height - 20 - groundHeight;
   startTime = null; // Reset the start time
   elapsedTime = 0; // Reset the elapsed time
 }
@@ -246,8 +254,8 @@ function draw() {
   updateSquares();
   updateClouds(); // Update the clouds
   updateTrees(); // Update the trees
-  if (character.y + character.height > canvas.height - 20) { // Check if the character is below the ground
-    character.y = canvas.height - 20 - character.height;
+  if (character.y + character.height > canvas.height - groundHeight) { // Check if the character is below the ground
+    character.y = canvas.height - groundHeight - character.height;
     character.yVelocity = 0;
   }
   requestAnimationFrame(draw);
@@ -258,7 +266,7 @@ document.addEventListener("keydown", event => {
     if (gameOver) {
       restartGame();
       requestAnimationFrame(draw);
-    } else if (character.y + character.height === canvas.height - 20) {
+    } else if (character.y + character.height === canvas.height - groundHeight) {
       character.yVelocity = -character.jumpPower;
     }
   }
@@ -268,7 +276,7 @@ document.addEventListener("touchstart", event => {
   if (gameOver) {
     restartGame();
     requestAnimationFrame(draw);
-  } else if (character.y + character.height === canvas.height - 20) {
+  } else if (character.y + character.height === canvas.height - groundHeight) {
     character.yVelocity = -character.jumpPower;
   }
 });
